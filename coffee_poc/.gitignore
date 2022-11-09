@@ -1,0 +1,14 @@
+/bin/
+/crypto-config/*
+# channel-artefacts/*.tx
+# channel-artefacts/*.block
+/chaincode/node_modules/*
+/*.tar.*
+/chaincode/package-lock.json
+/api/node_modules/*
+api/package-lock.json
+/chaincode/package-lock.json
+# /api/tata-wallet/*.id
+# /api/teafarm-wallet/*.id
+# /fabric-ca-config/*
+# /bin/

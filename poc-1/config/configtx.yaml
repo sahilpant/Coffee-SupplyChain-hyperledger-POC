@@ -1,0 +1,154 @@
+Organizations:
+    - &OrdererOrg
+        Name: OrdererOrg
+        ID: OrdererMSP
+        MSPDir: ../crypto-config/ordererOrganizations/service.com/msp
+        Policies: &SamplePolicies
+            Readers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+            Admins: 
+                Type: Signature
+                Rule: "OR('OrdererMSP.admin')"
+        OrdererEndpoints:
+            - orderer.service.com:7050 # hostname.domain:<port>
+    
+    - &Honda
+        Name: Honda
+        ID: HondaMSP
+        MSPDir: ../crypto-config/peerOrganizations/honda.bigwing.com/msp
+        Policies: 
+            Readers:
+                Type: Signature
+                Rule: "OR('HondaMSP.admin','HondaMSP.member','HondaMSP.client','HondaMSP.peer')"
+            Writers:
+                Type: Signature
+                Rule: "OR('HondaMSP.client','HondaMSP.admin')"
+            Admins: 
+                Type: Signature
+                Rule: "OR('HondaMSP.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('HondaMSP.peer','HondaMSP.admin')" 
+        AnchorPeers: #for inter-channel communication 
+            Host: hondapeer1.honda.bigwing.com
+            Port: 7051
+
+    - &RapidInnovation
+        Name: RapidInnovation
+        ID: RapidInnovationMSP
+        MSPDir: ../crypto-config/peerOrganizations/ri.blockchain.io/msp
+        Policies: 
+            Readers:
+                Type: Signature
+                Rule: "OR('RapidInnovationMSP.admin','RapidInnovationMSP.member','RapidInnovationMSP.client','RapidInnovationMSP.peer')"
+            Writers:
+                Type: Signature
+                Rule: "OR('RapidInnovationMSP.member','RapidInnovationMSP.admin')"
+            Admins: 
+                Type: Signature
+                Rule: "OR('RapidInnovationMSP.admin')" 
+            Endorsement:
+                Type: Signature
+                Rule: "OR('RapidInnovationMSP.peer','RapidInnovationMSP.admin')"        
+        AnchorPeers: #for inter-channel communication 
+            Host: ripeer1.ri.blockchain.io
+            Port: 9051
+
+Capabilities:
+    Channel: &ChannelCapabilities
+        V2_0: true
+        V1_4_3: true
+    Orderer: &OrdererCapabilities
+        V2_0: true
+        V1_4_2: true
+    Application: &ApplicationCapabilities
+        V2_0: true
+        V1_4_2: true
+
+Application: &ApplicationDefaults
+    Organizations:
+    Policies: 
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        LifecycleEndorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+        Endorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"    
+    Capabilities: 
+        <<: *ApplicationCapabilities
+
+Orderer: &OrdererDefaults
+    OrdererType: solo
+    Addresses: 
+        - orderer.service.com:7050
+    BatchTimeout: 2s
+    BatchSize:
+        MaxMessageCount: 10
+        AbsoluteMaxBytes: 99 MB
+        PreferredMaxBytes: 512 KB
+    Organizations:
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        BlockValidation:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+
+Channel: &ChannelDefaults
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+    Capabilities:
+        <<: *ChannelCapabilities
+
+Profiles:
+    GenesisProfile:
+        <<: *ChannelDefaults
+        Orderer:
+            <<: *OrdererDefaults
+            Organizations:
+                - *OrdererOrg         
+            Capabilities:
+                <<: *OrdererCapabilities
+        Consortiums:
+            SampleConsortium:
+                Organizations:
+                    - *Honda
+                    - *RapidInnovation
+    TwoOrgsChannel:
+        Consortium: SampleConsortium
+        <<: *ChannelDefaults
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *Honda
+                - *RapidInnovation
+            Capabilities:
+                <<: *ApplicationCapabilities

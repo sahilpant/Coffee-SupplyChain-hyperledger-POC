@@ -1,0 +1,159 @@
+# Instructions for this repo setup
+
+>**Note** : 
+Be conscious of location/dir when running the Commands
+Create channel-artefacts directory in root folder if not present.
+
+## Setup the paths 
+> export PATH=${PWD}/bin:$PATH
+
+> export FABRIC_CFG_PATH=${PWD}/config
+
+## Create the crypto-graphic material
+> ```cryptogen generate --config=${PWD}/crypto-config.yaml```
+
+## Create the genesis block, using the configtxgen & genesis profile
+> ```configtxgen --outputBlock ./channel-artefacts/genesis.block -profile GenesisProfile -channelID orderer-channel```
+
+## Create channel transaction for application channel
+> ```configtxgen -profile TwoOrgsChannel -outputCreateChannelTx ./channel-artefacts/application-channel.tx -channelID application-channel```
+
+## Create the anchor peers for organization
+> ```  configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./channel-artefacts/rapid-anchor.tx -channelID application-channel -asOrg RapidInnovation```
+
+>```   configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./channel-artefacts/honda-anchor.tx -channelID application-channel -asOrg Honda```
+
+## Move to docker folder / or wherever docker files artefacts are
+> ``` sudo docker-compose -f docker-compose-cli.yaml up -d```
+
+## Lets move to root directory
+> Set the cli as one of the peers
+
+>export CORE_PEER_ADDRESS=hondapeer1.honda.bigwing.com:7051
+
+>export CORE_PEER_LOCALMSPID="HondaMSP"
+    
+>export CORE_PEER_TLS_ENABLED=true
+    
+>export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/crypto-config/peerOrganizations/honda.bigwing.com/peers/hondapeer1.honda.bigwing.com/tls/ca.crt
+    
+>export CORE_PEER_TLS_CERT_FILE=${PWD}/crypto-config/peerOrganizations/honda.bigwing.com/peers/hondapeer1.honda.bigwing.com/tls/server.crt
+    
+>export CORE_PEER_TLS_KEY_FILE=${PWD}/crypto-config/peerOrganizations/honda.bigwing.com/peers/hondapeer1.honda.bigwing.com/tls/server.key 
+    
+>export CORE_PEER_MSPCONFIGPATH=${PWD}/crypto-config/peerOrganizations/honda.bigwing.com/users/Admin@honda.bigwing.com/msp
+
+
+## Create channel using the peer Commands
+> ```peer channel create -o localhost:7050  --ordererTLSHostnameOverride orderer -c application-channel -f ../channel-artefacts/application-channel.tx --outputBlock ../channel-artefacts/application-genesis.block --tls --cafile ../crypto-config/ordererOrganizations/service.com/orderers/orderer.service.com/msp/tlscacerts/tlsca.service.com-cert.pem```
+
+
+ **2nd option command for same task**
+>  ```  peer channel create -c application-channel -f ./channel-artefacts/application-channel.tx --orderer orderer.service.com:7050```
+
+
+## Join other peers to network
+> ```peer channel join -b /opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts/application-genesis.block```
+
+## join all peers to this
+
+## Package chaincode
+> ```peer lifecycle chaincode package basic.tar.gz --path /opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode --lang node --label basic_1.0```
+
+**Note : No need to setup these variables if you are using the container & have separate cli for peers**
+## Install chaincode package
+> Set the env variables according to the peers of org that wil endorse tx.
+
+**For Honda peer-1**
+``` 
+export CORE_PEER_TLS_ENABLED=true
+export CORE_PEER_LOCALMSPID="HondaMSP"
+export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/crypto-config/peerOrganizations/honda.bigwing.com/peers/hondapeer1.honda.bigwing.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=${PWD}/crypto-config/peerOrganizations/honda.bigwing.com/users/Admin@honda.bigwing.com/msp
+export CORE_PEER_ADDRESS=hondapeer1.honda.bigwing.com:7051
+```
+
+**For Honda peer-2**
+```export CORE_PEER_TLS_ENABLED=true
+export CORE_PEER_LOCALMSPID="HondaMSP"
+export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/crypto-config/peerOrganizations/honda.bigwing.com/peers/hondapeer2.honda.bigwing.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=${PWD}/crypto-config/peerOrganizations/honda.bigwing.com/users/Admin@honda.bigwing.com/msp
+export CORE_PEER_ADDRESS=hondapeer1.honda.bigwing.com:8051
+```
+
+ **For RI peer-1**
+ ```
+export CORE_PEER_TLS_ENABLED=true
+export CORE_PEER_LOCALMSPID="RapidInnovationMSP"
+export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/crypto-config/peerOrganizations/ri.blockchain.io/peers/ripeer1.ri.blockchain.io/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=${PWD}/crypto-config/peerOrganizations/ri.blockchain.io/users/Admin@ri.blockchain.io/msp
+export CORE_PEER_ADDRESS=ripeer1.ri.blockchain.io:9051
+```
+
+ **For RI peer-2**
+``` 
+export CORE_PEER_TLS_ENABLED=true
+export CORE_PEER_LOCALMSPID="RapidInnovationMSP"
+export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/crypto-config/peerOrganizations/ri.blockchain.io/peers/ripeer2.ri.blockchain.io/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=${PWD}/crypto-config/peerOrganizations/ri.blockchain.io/users/Admin@ri.blockchain.io/msp
+export CORE_PEER_ADDRESS=ripeer1.ri.blockchain.io:10051
+```
+
+ ## Use the peer's install command
+> ``` peer lifecycle chaincode install /opt/gopath/src/github.com/hyperledger/fabric/peer/basic.tar.gz ```
+
+## Approve the chaincode for the org
+  **If an organization has installed the chaincode on their peer, they need
+    to include the packageID in the chaincode definition approved by their organization**
+
+**Get packageID using**
+
+> ```peer lifecycle chaincode queryinstalled```
+
+**Export the packageID in an env var
+    export CC_PACKAGE_ID**
+
+## Approve the chaincode
+
+> Chaincode is approved at the organization level, so the command only needs to target one peer. The approval is distributed to the other peers within the organization using gossip
+
+```peer lifecycle chaincode approveformyorg -o orderer.service.com:7050 --ordererTLSHostnameOverride orderer --channelID application-channel --name basic --version 1.0 --package-id $CC_PACKAGE_ID --sequence 1 --tls --cafile "${PWD}/crypto/ordererOrganizations/service.com/orderers/orderer.service.com/msp/tlscacerts/tlsca.service.com-cert.pem"```
+
+## Commit chaincode to channel
+> After a sufficient number of organizations have approved a chaincode definition, 
+> one organization can commit the chaincode definition to the channel.
+>If a majority of channel members have approved the definition,
+>the commit transaction will be successful and the parameters agreed to in the chaincode definition will be implemented on the channel.
+``` peer lifecycle chaincode checkcommitreadiness --channelID application-channel --name basic --version 1.0 --sequence 1 --tls --cafile "${PWD}/crypto/ordererOrganizations/service.com/orderers/orderer.service.com/msp/tlscacerts/tlsca.service.com-cert.pem" --output json
+peer lifecycle chaincode commit -o orderer.service.com:7050 --ordererTLSHostnameOverride orderer --channelID application-channel --name basic --version 1.0 --sequence 1 --tls --cafile "${PWD}/crypto/ordererOrganizations/service.com/orderers/orderer.service.com/msp/tlscacerts/tlsca.service.com-cert.pem" --peerAddresses hondapeer1.honda.bigwing.com:7051 --tlsRootCertFiles "${PWD}/crypto/peerOrganizations/honda.bigwing.com/peers/hondapeer1.honda.bigwing.com/tls/ca.crt" --peerAddresses ripeer1.ri.blockchain.io:9051 --tlsRootCertFiles "${PWD}/crypto/peerOrganizations/ri.blockchain.io/peers/ripeer1.ri.blockchain.io/tls/ca.crt" 
+```
+
+## Invoke the chaincode
+```peer chaincode invoke -o orderer.service.com:7050 --ordererTLSHostnameOverride orderer --tls --cafile "${PWD}/crypto/ordererOrganizations/service.com/orderers/orderer.service.com/msp/tlscacerts/tlsca.service.com-cert.pem" -C application-channel -n basic --peerAddresses hondapeer1.honda.bigwing.com:7051 --tlsRootCertFiles "${PWD}/crypto/peerOrganizations/honda.bigwing.com/peers/hondapeer1.honda.bigwing.com/tls/ca.crt" --peerAddresses ripeer1.ri.blockchain.io:9051 --tlsRootCertFiles "${PWD}/crypto/peerOrganizations/ri.blockchain.io/peers/ripeer1.ri.blockchain.io/tls/ca.crt" -c '{"function":"InitLedger","Args":[]}'```
+
+
+============================================================================================================
+
+Some error resolutions : 
+
+If you face var\\run\docker.sock invalid issue
+> export COMPOSE_CONVERT_WINDOWS_PATHS=1
+
+If you face issues like state needs to be 0 but current level is 1, try following
+> docker-compose -f docker-compose.yaml down --volumes
+> docker volume prune
+Also remove all the artifacts created by you.
+
+If facing issues regarding tcp dial look up
+Add following in peers in configtx.yaml in cli section
+
+> dns_search: .
+
+
+============================================================================
+
+Install nodejs on ec2 Commands
+> curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.0/install.sh | bash
+> . ~/.nvm/nvm.sh
+> nvm install --lts
+

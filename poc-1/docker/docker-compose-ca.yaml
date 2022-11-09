@@ -1,0 +1,105 @@
+version: '2'
+
+volumes:
+  honda-peer-1:
+  honda-peer-2:
+  ri-peer-1:
+  ri-peer-2:
+  orderer.service.com:
+
+networks:
+  test:
+    name: test
+
+services:
+
+  ca_honda:
+    image: hyperledger/fabric-ca:latest
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca-honda
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTIFICATE=/etc/hyperledger/fabric-ca-server-config/ca.honda.bigwing.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/priv_sk
+      - FABRIC_CA_SERVER_OPERATIONS_LISTENADDRESS=0.0.0.0:2010
+    ports:
+      - "2010:2010"
+      # - "17054:17054"
+    command: sh -c 'fabric-ca-server start -ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.honda.bigwing.com-cert.pem -ca.keyfile /etc/hyperledger/fabric-ca-server-config/priv_sk -b admin:adminpw -d'
+    volumes:
+      - ../crypto-config/peerOrganizations/honda.bigwing.com/ca/:/etc/hyperledger/fabric-ca-server
+    container_name: ca_honda
+    networks:
+      - test
+
+  ca_RapidInnovation:
+    image: hyperledger/fabric-ca:latest
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca-rapidInnovation
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTIFICATE=/etc/hyperledger/fabric-ca-server-config/ca.ri.blockchain.io-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/priv_sk
+      - FABRIC_CA_SERVER_OPERATIONS_LISTENADDRESS=0.0.0.0:3010
+    ports:
+      - "3010:3010"
+      # - "18054:18054"
+    command: sh -c 'fabric-ca-server -ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.ri.blockchain.io-cert.pem -ca.keyfile /etc/hyperledger/fabric-ca-server-config/priv_sk -b admin:adminpw -d'
+    volumes:
+      - ../crypto-config/peerOrganizations/ri.blockchain.io/ca/:/etc/hyperledger/fabric-ca-server
+    container_name: ca_RapidInnovation
+    networks:
+      - test
+
+  ca_orderer:
+    image: hyperledger/fabric-ca:latest
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca-orderer
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_PORT=9054
+      - FABRIC_CA_SERVER_OPERATIONS_LISTENADDRESS=0.0.0.0:9054
+    ports:
+      - "9054:9054"
+      # - "19054:19054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ../crypto-config/ordererOrganizations/service.com/ca/:/etc/hyperledger/fabric-ca-server
+    container_name: ca_orderer
+    networks:
+      - test
+
+  honda-peer-1:
+    extends:
+      file: ./docker-compose-base.yaml
+      service: honda-peer-1
+      # networks:
+      #   - test  
+
+  honda-peer-2:
+    extends:
+      file: ./docker-compose-base.yaml
+      service: honda-peer-2
+      # networks:
+      #   - test  
+
+  ri-peer-1:
+    extends:
+      file: ./docker-compose-base.yaml
+      service: ri-peer-1
+      # networks:
+      #   - test 
+  
+  ri-peer-2:
+    extends:
+      file: ./docker-compose-base.yaml
+      service: ri-peer-2
+      # networks:
+      #   - test    
+
+  # orderer.service.com:
+  #   extends:
+  #     file: ./docker-compose-base.yaml
+  #     service: orderer.service.com
+      # networks:
+      #   - test

@@ -1,0 +1,139 @@
+***************Instructions for this repo setup************************
+
+Note : 
+Be conscious of location/dir when running the Commands
+Create channel-artefacts directory in root folder if not present.
+Create tata-wallet, teafarm-wallet folders inside api folder.
+
+Setup the paths 
+export PATH=${PWD}/bin:$PATH
+export FABRIC_CFG_PATH=${PWD}/config
+
+2. Create the crypto-graphic material
+> cryptogen generate --config=${PWD}/crypto-config.yaml
+
+3. Create the genesis block, using the configtxgen & genesis profile
+> configtxgen --outputBlock ./channel-artefacts/genesis.block -profile GenesisProfile -channelID orderer-channel
+
+
+4. Create channel tx needs to be created for different org purposes
+a. b/w manufacturer & production
+> configtxgen -profile ManufacturerProductionProfile -outputCreateChannelTx ./channel-artefacts/mfd-prd-channel.tx -channelID mfd-prd-channel
+
+b. b/w manufacturer & wharehouse
+> configtxgen -profile ManufacturerWharehouseProfile -outputCreateChannelTx ./channel-artefacts/mfd-whs-channel.tx -channelID mfd-whs-channel
+
+c. b/w wharehouse & retailer
+> configtxgen -profile WharehouseRetailerProfile -outputCreateChannelTx ./channel-artefacts/whs-rtlr-channel.tx -channelID whs-rtlr-channel
+
+d. Optional
+> configtxgen -profile CoffeeChannelProfile -outputCreateChannelTx ./channel-artefacts/application-channel.tx -channelID application-channel
+
+
+
+5. Create anchor peers according to different channels 
+
+a. Create the anchor peers for manufacturer & production
+
+> configtxgen -profile ManufacturerProductionProfile -outputAnchorPeersUpdate ./channel-artefacts/mfd-prd-anchor.tx -channelID mfd-prd-channel -asOrg teafarm
+> configtxgen -profile ManufacturerProductionProfile -outputAnchorPeersUpdate ./channel-artefacts/mfd-prd-anchor.tx -channelID mfd-prd-channel -asOrg tata
+
+b. Create anchor peers for manufacturer & wharehouse
+> configtxgen -profile ManufacturerWharehouseProfile -outputAnchorPeersUpdate ./channel-artefacts/mfd-whs-anchor.tx -channelID mfd-whs-channel -asOrg tata
+> configtxgen -profile ManufacturerWharehouseProfile -outputAnchorPeersUpdate ./channel-artefacts/mfd-whs-anchor.tx -channelID mfd-whs-channel -asOrg tatastore
+
+c. Create anchor peers for wharehouse & retailer
+
+> configtxgen -profile WharehouseRetailerProfile -outputAnchorPeersUpdate ./channel-artefacts/whs-rtlr-anchor.tx -channelID whs-rtlr-channel -asOrg tatastore
+> configtxgen -profile WharehouseRetailerProfile -outputAnchorPeersUpdate ./channel-artefacts/whs-rtlr-anchor.tx -channelID whs-rtlr-channel -asOrg bigbazar
+
+d. Optional
+> configtxgen -profile CoffeeChannelProfile -outputAnchorPeersUpdate ./channel-artefacts/teafarm-anchor.tx -channelID application-channel -asOrg teafarm
+> configtxgen -profile CoffeeChannelProfile -outputAnchorPeersUpdate ./channel-artefacts/tata-anchor.tx -channelID application-channel -asOrg tata
+> configtxgen -profile CoffeeChannelProfile -outputAnchorPeersUpdate ./channel-artefacts/tatastore-anchor.tx -channelID application-channel -asOrg tatastore
+> configtxgen -profile CoffeeChannelProfile -outputAnchorPeersUpdate ./channel-artefacts/bigbazar-anchor.tx -channelID application-channel -asOrg bigbazar
+
+
+6. move to docker directory
+    sudo docker-compose -f docker-compose-cli.yaml up -d
+
+Lets move to root directory
+Set the cli as one of the peers
+    export CORE_PEER_ADDRESS=peertm1.manufacturer.com:8050
+    export CORE_PEER_LOCALMSPID="teafarmMSP"
+    export CORE_PEER_TLS_ENABLED=true
+    export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/crypto-config/peerOrganizations/manufacturer.com/peers/peertm1.manufacturer.com/tls/ca.crt
+    export CORE_PEER_TLS_CERT_FILE=${PWD}/crypto-config/peerOrganizations/manufacturer.com/peers/peertm1.manufacturer.com/tls/server.crt
+    export CORE_PEER_TLS_KEY_FILE=${PWD}/crypto-config/peerOrganizations/manufacturer.com/peers/peertm1.manufacturer.com/tls/server.key 
+    export CORE_PEER_MSPCONFIGPATH=${PWD}/crypto-config/peerOrganizations/manufacturer.com/users/Admin@manufacturer.com/msp
+
+Execute the respective cli's in your terminal
+So for manufacturer cli enter command
+sudo docker exec -it cli-manufacturer-1 sh
+
+
+7. Create channels 
+
+a. Create channel using the peer Commands for manufacturer & production
+> peer channel create -o orderer1.gov.io:7050 -c mfd-prd-channel -f ./channel-artifacts/mfd-prd-channel.tx --outputBlock ./channel-artifacts/mfd-prd-genesis.block --tls --cafile ${PWD}/crypto/ordererOrganizations/gov.io/orderers/orderer1.gov.io/msp/tlscacerts/tlsca.gov.io-cert.pem
+
+b. Create channel using the peer Commands for manufacturer & wharehouse
+> peer channel create -o orderer1.gov.io:7050 -c mfd-whs-channel -f ./channel-artifacts/mfd-whs-channel.tx --outputBlock ./channel-artifacts/mfd-whs-genesis.block --tls --cafile ./crypto/ordererOrganizations/gov.io/orderers/orderer1.gov.io/msp/tlscacerts/tlsca.gov.io-cert.pem
+
+c. Create channel using the peer Commands for wharehouse & retailer
+> peer channel create -o orderer1.gov.io:7050 -c whs-rtlr-channel -f ./channel-artifacts/whs-rtlr-channel.tx --outputBlock ./channel-artifacts/whs-rtlr-genesis.block --tls --cafile ./crypto/ordererOrganizations/gov.io/orderers/orderer1.gov.io/msp/tlscacerts/tlsca.gov.io-cert.pem
+
+
+8. 
+a. Join other peers to network for manufacturer & production
+> peer channel join -b /opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts/mfd-prd-genesis.block
+
+b. Join other peers to network for production & wharehouse
+> peer channel join -b /opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts/prd-whs-genesis.block
+
+c. Join other peers to network for wharehouse & retailer
+> peer channel join -b /opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts/whs-rtlr-genesis.block
+
+Join all peers accrodingly
+
+9. Package chaincode for all channels
+peer lifecycle chaincode package basic.tar.gz --path /opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode --lang node --label basic_1.0
+
+10. Install chaincode
+peer lifecycle chaincode install /opt/gopath/src/github.com/hyperledger/fabric/peer/basic.tar.gz
+
+
+Approve the chaincode for the org
+    If an organization has installed the chaincode on their peer, they need
+    to include the packageID in the chaincode definition approved by their organization.
+
+> Get packageID using
+peer lifecycle chaincode queryinstalled
+    Export the packageID in an env var
+    export CC_PACKAGE_ID
+
+> Approve the chaincode for your org using
+    Chaincode is approved at the organization level, so the command only needs to target one peer.
+    The approval is distributed to the other peers within the organization using gossip. 
+
+peer lifecycle chaincode approveformyorg -o orderer1.gov.io:7050 --channelID mfd-prd-channel --name basic --version 1.0 --package-id $CC_PACKAGE_ID --sequence 1 --tls --cafile "${PWD}/crypto/ordererOrganizations/gov.io/orderers/orderer1.gov.io/msp/tlscacerts/tlsca.gov.io-cert.pem"
+
+> Commit chaincode to channel
+    After a sufficient number of organizations have approved a chaincode definition, 
+    one organization can commit the chaincode definition to the channel.
+    If a majority of channel members have approved the definition,
+    the commit transaction will be successful and the parameters agreed to in the chaincode definition will be implemented on the channel.
+
+a. For manufacturer & production
+
+peer lifecycle chaincode checkcommitreadiness --channelID mfd-prd-channel --name basic --version 1.0 --sequence 1 --tls --cafile "${PWD}/crypto/ordererOrganizations/gov.io/orderers/orderer1.gov.io/msp/tlscacerts/tlsca.gov.io-cert.pem" --output json
+peer lifecycle chaincode commit -o orderer1.gov.io:7050 --channelID mfd-prd-channel --name basic --version 1.0 --sequence 1 --tls --cafile "${PWD}/crypto/ordererOrganizations/gov.io/orderers/orderer1.gov.io/msp/tlscacerts/tlsca.gov.io-cert.pem" --peerAddresses peertf1.production.com:8050 --tlsRootCertFiles "${PWD}/crypto/peerOrganizations/production.com/peers/peertf1.production.com/tls/ca.crt" --peerAddresses peertm1.manufacturer.com:9050 --tlsRootCertFiles "${PWD}/crypto/peerOrganizations/manufacturer.com/peers/peertm1.manufacturer.com/tls/ca.crt"
+
+b. For manufacturer & wharehouse
+
+
+c. For wharehouse &  retailer
+
+
+> Invoke the chaincode
+peer chaincode invoke -o orderer1.gov.io:7050 --tls --cafile "${PWD}/crypto/ordererOrganizations/gov.io/orderers/orderer1.gov.io/msp/tlscacerts/tlsca.gov.io-cert.pem" -C mfd-prd-channel -n basic --peerAddresses peertf1.production.com:8050 --tlsRootCertFiles "${PWD}/crypto/peerOrganizations/production.com/peers/peertf1.production.com/tls/ca.crt" --peerAddresses peertm1.manufacturer.com:9050 --tlsRootCertFiles "${PWD}/crypto/peerOrganizations/manufacturer.com/peers/peertm1.manufacturer.com/tls/ca.crt" -c '{"function":"InitLedger","Args":[]}'

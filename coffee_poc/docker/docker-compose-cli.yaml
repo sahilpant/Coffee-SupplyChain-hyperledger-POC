@@ -1,0 +1,490 @@
+version: '2.1'
+
+volumes:
+  orderer:
+  peertm1.manufacturer.com:
+  peertm2.manufacturer.com:
+  peertf1.production.com:
+  peertf2.production.com:
+  peerbb1.retailer.com:
+  peerbb2.retailer.com:
+  peerts1.wharehouse.com:
+  peerts2.wharehouse.com:
+  peergov1.gov.io:
+
+networks:
+  test:
+    name: test
+
+services:
+
+  orderer:
+    extends:
+      file: docker-compose-base.yaml
+      service: orderer1.gov.io
+    container_name: orderer1.gov.io
+    networks:
+      - test
+
+  peertm1.manufacturer.com:
+    extends:
+      file: docker-compose-base.yaml
+      service: peertm1.manufacturer.com
+    container_name: peertm1.manufacturer.com
+    networks: 
+      - test
+
+  peertm2.manufacturer.com:
+    extends:
+      file: docker-compose-base.yaml
+      service: peertm2.manufacturer.com
+    container_name: peertm2.manufacturer.com
+    networks: 
+      - test  
+
+  peertf1.production.com:
+    extends: 
+      file: docker-compose-base.yaml
+      service: peertf1.production.com
+    container_name: peertf1.production.com
+    networks:
+      - test
+
+  peertf2.production.com:
+    extends: 
+      file: docker-compose-base.yaml
+      service: peertf2.production.com
+    container_name: peertf2.production.com
+    networks:
+      - test  
+  
+  peerbb1.retailer.com:
+    extends: 
+      file: docker-compose-base.yaml
+      service: peerbb1.retailer.com
+    container_name: peerbb1.retailer.com
+    networks:
+      - test
+  
+  peerbb2.retailer.com:
+    extends: 
+      file: docker-compose-base.yaml
+      service: peerbb2.retailer.com
+    container_name: peerbb2.retailer.com
+    networks:
+      - test  
+
+  peerts1.wharehouse.com:
+    extends: 
+      file: docker-compose-base.yaml
+      service: peerts1.wharehouse.com
+    container_name: peerts1.wharehouse.com
+    networks:
+      - test
+  
+  peerts2.wharehouse.com:
+    extends: 
+      file: docker-compose-base.yaml
+      service: peerts2.wharehouse.com
+    container_name: peerts2.wharehouse.com
+    networks:
+      - test
+  
+  peergov1.gov.io:
+    extends:
+      file: docker-compose-base.yaml
+      service: peergov1.gov.io
+    container_name: peergov1.gov.io
+    networks:
+      - test
+
+  cli-manufacturer-1:
+    container_name: cli-manufacturer-1
+    image: hyperledger/fabric-tools:2.2
+    tty: true
+    stdin_open: true
+    environment:
+      - SYS_CHANNEL=orderer-channel
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=peertm1.manufacturer.com
+      - CORE_PEER_ADDRESS=peertm1.manufacturer.com:9050
+      - CORE_PEER_LOCALMSPID=tataMSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/manufacturer.com/peers/peertm1.manufacturer.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/manufacturer.com/peers/peertm1.manufacturer.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/manufacturer.com/peers/peertm1.manufacturer.com/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/manufacturer.com/users/Admin@manufacturer.com/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./../chaincode/:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode
+      - ../crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ../:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - ../channel-artefacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    depends_on:
+      - peertm1.manufacturer.com
+      - peertm2.manufacturer.com
+      - peertf1.production.com
+      - peertf2.production.com
+      - peerbb1.retailer.com
+      - peerbb2.retailer.com
+      - peerts1.wharehouse.com
+      - peerts2.wharehouse.com
+      - orderer
+    networks:
+      - test
+
+  cli-manufacturer-2:
+    container_name: cli-manufacturer-2
+    image: hyperledger/fabric-tools:2.2
+    tty: true
+    stdin_open: true
+    environment:
+      - SYS_CHANNEL=orderer-channel
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=peertm2.manufacturer.com
+      - CORE_PEER_ADDRESS=peertm2.manufacturer.com:9080
+      - CORE_PEER_LOCALMSPID=tataMSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/manufacturer.com/peers/peertm2.manufacturer.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/manufacturer.com/peers/peertm2.manufacturer.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/manufacturer.com/peers/peertm2.manufacturer.com/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/manufacturer.com/users/Admin@manufacturer.com/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./../chaincode/:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode
+      - ../crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ../:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - ../channel-artefacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    depends_on:
+      - peertm1.manufacturer.com
+      - peertm2.manufacturer.com
+      - peertf1.production.com
+      - peertf2.production.com
+      - peerbb1.retailer.com
+      - peerbb2.retailer.com
+      - peerts1.wharehouse.com
+      - peerts2.wharehouse.com
+      - orderer
+    networks:
+      - test
+
+  cli-production-1:
+    container_name: cli-production-1
+    image: hyperledger/fabric-tools:2.2
+    tty: true
+    stdin_open: true
+    environment:
+      - SYS_CHANNEL=orderer-channel
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=peertf1.production.com
+      - CORE_PEER_ADDRESS=peertf1.production.com:8050
+      - CORE_PEER_LOCALMSPID=teafarmMSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/production.com/peers/peertf1.production.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/production.com/peers/peertf1.production.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/production.com/peers/peertf1.production.com/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/production.com/users/Admin@production.com/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./../chaincode/:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode
+      - ../crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ../:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - ../channel-artefacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    depends_on:
+      - peertm1.manufacturer.com
+      - peertm2.manufacturer.com
+      - peertf1.production.com
+      - peertf2.production.com
+      - peerbb1.retailer.com
+      - peerbb2.retailer.com
+      - peerts1.wharehouse.com
+      - peerts2.wharehouse.com
+      - orderer
+    networks:
+      - test
+
+  cli-production-2:
+    container_name: cli-production-2
+    image: hyperledger/fabric-tools:2.2
+    tty: true
+    stdin_open: true
+    environment:
+      - SYS_CHANNEL=orderer-channel
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=peertf1.production.com
+      - CORE_PEER_ADDRESS=peertf2.production.com:8080
+      - CORE_PEER_LOCALMSPID=teafarmMSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/production.com/peers/peertf2.production.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/production.com/peers/peertf2.production.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/production.com/peers/peertf2.production.com/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/production.com/users/Admin@production.com/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./../chaincode/:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode
+      - ../crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ../:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - ../channel-artefacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    depends_on:
+      - peertm1.manufacturer.com
+      - peertm2.manufacturer.com
+      - peertf1.production.com
+      - peertf2.production.com
+      - peerbb1.retailer.com
+      - peerbb2.retailer.com
+      - peerts1.wharehouse.com
+      - peerts2.wharehouse.com
+      - orderer
+    networks:
+      - test
+
+  cli-retail-1:
+    container_name: cli-retail-1
+    image: hyperledger/fabric-tools:2.2
+    tty: true
+    stdin_open: true
+    environment:
+      - SYS_CHANNEL=orderer-channel
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=peerbb1.retailer.com
+      - CORE_PEER_ADDRESS=peerbb1.retailer.com:11050
+      - CORE_PEER_LOCALMSPID=bigbazarMSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/retailer.com/peers/peerbb1.retailer.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/retailer.com/peers/peerbb1.retailer.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/retailer.com/peers/peerbb1.retailer.com/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/retailer.com/users/Admin@retailer.com/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./../chaincode/:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode
+      - ../crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ../:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - ../channel-artefacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    depends_on:
+      - peertm1.manufacturer.com
+      - peertm2.manufacturer.com
+      - peertf1.production.com
+      - peertf2.production.com
+      - peerbb1.retailer.com
+      - peerbb2.retailer.com
+      - peerts1.wharehouse.com
+      - peerts2.wharehouse.com
+      - orderer
+    networks:
+      - test
+
+  cli-retail-2:
+    container_name: cli-retail-2
+    image: hyperledger/fabric-tools:2.2
+    tty: true
+    stdin_open: true
+    environment:
+      - SYS_CHANNEL=orderer-channel
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=peerbb2.retailer.com
+      - CORE_PEER_ADDRESS=peerbb2.retailer.com:11080
+      - CORE_PEER_LOCALMSPID=bigbazarMSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/retailer.com/peers/peerbb2.retailer.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/retailer.com/peers/peerbb2.retailer.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/retailer.com/peers/peerbb2.retailer.com/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/retailer.com/users/Admin@retailer.com/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./../chaincode/:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode
+      - ../crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ../:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - ../channel-artefacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    depends_on:
+      - peertm1.manufacturer.com
+      - peertm2.manufacturer.com
+      - peertf1.production.com
+      - peertf2.production.com
+      - peerbb1.retailer.com
+      - peerbb2.retailer.com
+      - peerts1.wharehouse.com
+      - peerts2.wharehouse.com
+      - orderer
+    networks:
+      - test
+
+  cli-wharehouse-1:
+    container_name: cli-wharehouse-1
+    image: hyperledger/fabric-tools:2.2
+    tty: true
+    stdin_open: true
+    environment:
+      - SYS_CHANNEL=orderer-channel
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=peerts1.wharehouse.com
+      - CORE_PEER_ADDRESS=peerts1.wharehouse.com:10050
+      - CORE_PEER_LOCALMSPID=tatastoreMSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/wharehouse.com/peers/peerts1.wharehouse.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/wharehouse.com/peers/peerts1.wharehouse.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/wharehouse.com/peers/peerts1.wharehouse.com/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/wharehouse.com/users/Admin@wharehouse.com/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./../chaincode/:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode
+      - ../crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ../:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - ../channel-artefacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    depends_on:
+      - peertm1.manufacturer.com
+      - peertm2.manufacturer.com
+      - peertf1.production.com
+      - peertf2.production.com
+      - peerbb1.retailer.com
+      - peerbb2.retailer.com
+      - peerts1.wharehouse.com
+      - peerts2.wharehouse.com
+      - orderer
+    networks:
+      - test
+
+  cli-wharehouse-2:
+    container_name: cli-wharehouse-2
+    image: hyperledger/fabric-tools:2.2
+    tty: true
+    stdin_open: true
+    environment:
+      - SYS_CHANNEL=orderer-channel
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=peerts2.wharehouse.com
+      - CORE_PEER_ADDRESS=peerts2.wharehouse.com:10080
+      - CORE_PEER_LOCALMSPID=tatastoreMSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/wharehouse.com/peers/peerts2.wharehouse.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/wharehouse.com/peers/peerts2.wharehouse.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/wharehouse.com/peers/peerts2.wharehouse.com/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/wharehouse.com/users/Admin@wharehouse.com/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./../chaincode/:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode
+      - ../crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ../:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - ../channel-artefacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    depends_on:
+      - peertm1.manufacturer.com
+      - peertm2.manufacturer.com
+      - peertf1.production.com
+      - peertf2.production.com
+      - peerbb1.retailer.com
+      - peerbb2.retailer.com
+      - peerts1.wharehouse.com
+      - peerts2.wharehouse.com
+      - orderer
+    networks:
+      - test
+
+
+  cli-gov-1:
+    container_name: cli-gov-1
+    image: hyperledger/fabric-tools:2.2
+    tty: true
+    stdin_open: true
+    environment:
+      - SYS_CHANNEL=orderer-channel
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=peergov1.gov.io
+      - CORE_PEER_ADDRESS=peergov1.gov.io:13050
+      - CORE_PEER_LOCALMSPID=govMSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/gov.io/peers/peergov1.gov.io/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/gov.io/peers/peergov1.gov.io/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/gov.io/peers/peergov1.gov.io/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/gov.io/users/Admin@gov.io/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./../chaincode/:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode
+      - ../crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ../:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - ../channel-artefacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    depends_on:
+      - peertm1.manufacturer.com
+      - peertm2.manufacturer.com
+      - peertf1.production.com
+      - peertf2.production.com
+      - peerbb1.retailer.com
+      - peerbb2.retailer.com
+      - peerts1.wharehouse.com
+      - peerts2.wharehouse.com
+      - orderer
+    networks:
+      - test
+
+
+  chaincode:
+    container_name: chaincode
+    image: hyperledger/fabric-ccenv:2.2
+    tty: true
+    environment:
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=DEBUG
+      - CORE_PEER_ID=chaincode
+      - CORE_PEER_ADDRESS=peertf1.production.com:8050
+      - CORE_PEER_LOCALMSPID=teafarmMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer #/opt/gopath/src/chaincode
+    command: /bin/sh -c 'sleep 6000000'
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./msp:/etc/hyperledger/msp
+      - ./../chaincode:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode
+    depends_on:
+      - peertm1.manufacturer.com
+      - peertm2.manufacturer.com
+      - peertf1.production.com
+      - peertf2.production.com
+      - peerbb1.retailer.com
+      - peerbb2.retailer.com
+      - peerts1.wharehouse.com
+      - peerts2.wharehouse.com
+      - orderer

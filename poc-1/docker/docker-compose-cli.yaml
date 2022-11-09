@@ -1,0 +1,230 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '2.1'
+
+volumes:
+  orderer:
+  hondapeer1.honda.bigwing.com:
+  hondapeer2.honda.bigwing.com:
+  ripeer1.ri.blockchain.io:
+  ripeer2.ri.blockchain.io:
+  # peer0.org2.example.com:
+
+networks:
+  test:
+    name: test
+
+services:
+
+  orderer:
+    extends:
+      file: docker-compose-base.yaml
+      service: orderer
+    container_name: orderer.service.com
+    networks:
+      - test
+
+  hondapeer1.honda.bigwing.com:
+    extends:
+      file:   docker-compose-base.yaml
+      service: hondapeer1.honda.bigwing.com
+    container_name: hondapeer1.honda.bigwing.com
+    networks:
+      - test
+
+  hondapeer2.honda.bigwing.com:
+    extends:
+      file:   docker-compose-base.yaml
+      service: hondapeer2.honda.bigwing.com
+    container_name: hondapeer2.honda.bigwing.com
+    networks:
+      - test
+
+  ripeer1.ri.blockchain.io:
+    extends:
+      file:   docker-compose-base.yaml
+      service: ripeer1.ri.blockchain.io
+    container_name: ripeer1.ri.blockchain.io
+    networks:
+      - test
+
+  ripeer2.ri.blockchain.io:
+    extends:
+      file:   docker-compose-base.yaml
+      service: ripeer2.ri.blockchain.io
+    container_name: ripeer2.ri.blockchain.io
+    networks:
+      - test
+
+  cli-honda-1:
+    container_name: cli-honda-1
+    image: hyperledger/fabric-tools:2.2
+    tty: true
+    stdin_open: true
+    environment:
+      - SYS_CHANNEL=orderer-channel
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=hondapeer1.honda.bigwing.com:7051
+      - CORE_PEER_LOCALMSPID=HondaMSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/honda.bigwing.com/peers/hondapeer1.honda.bigwing.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/honda.bigwing.com/peers/hondapeer1.honda.bigwing.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/honda.bigwing.com/peers/hondapeer1.honda.bigwing.com/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/honda.bigwing.com/users/Admin@honda.bigwing.com/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./../chaincode/:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode
+      - ../crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ../:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - ../channel-artefacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    depends_on:
+      - orderer
+      - hondapeer1.honda.bigwing.com
+      - hondapeer2.honda.bigwing.com
+      - ripeer1.ri.blockchain.io
+      - ripeer2.ri.blockchain.io
+    networks:
+      - test
+
+  cli-honda-2:
+    container_name: cli-honda-2
+    image: hyperledger/fabric-tools:2.2
+    tty: true
+    stdin_open: true
+    environment:
+      - SYS_CHANNEL=orderer-channel
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=hondapeer2.honda.bigwing.com:8051
+      - CORE_PEER_LOCALMSPID=HondaMSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/honda.bigwing.com/peers/hondapeer2.honda.bigwing.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/honda.bigwing.com/peers/hondapeer2.honda.bigwing.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/honda.bigwing.com/peers/hondapeer2.honda.bigwing.com/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/honda.bigwing.com/users/Admin@honda.bigwing.com/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./../chaincode/:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode
+      - ../crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ../:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - ../channel-artefacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    depends_on:
+      - orderer
+      - hondapeer1.honda.bigwing.com
+      - hondapeer2.honda.bigwing.com
+      - ripeer1.ri.blockchain.io
+      - ripeer2.ri.blockchain.io
+    networks:
+      - test
+
+  cli-ri-2:
+    container_name: cli-ri-2
+    image: hyperledger/fabric-tools:2.2
+    tty: true
+    stdin_open: true
+    environment:
+      - SYS_CHANNEL=orderer-channel
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=ripeer2.ri.blockchain.io:10051
+      - CORE_PEER_LOCALMSPID=RapidInnovationMSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/ri.blockchain.io/peers/ripeer2.ri.blockchain.io/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/ri.blockchain.io/peers/ripeer2.ri.blockchain.io/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/ri.blockchain.io/peers/ripeer2.ri.blockchain.io/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/ri.blockchain.io/users/Admin@ri.blockchain.io/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./../chaincode/:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode
+      - ../crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ../:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - ../channel-artefacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    depends_on:
+      - orderer
+      - hondapeer1.honda.bigwing.com
+      - hondapeer2.honda.bigwing.com
+      - ripeer1.ri.blockchain.io
+      - ripeer2.ri.blockchain.io
+    networks:
+      - test
+
+  cli-ri-1:
+    container_name: cli-ri-1
+    image: hyperledger/fabric-tools:2.2
+    tty: true
+    stdin_open: true
+    environment:
+      - SYS_CHANNEL=orderer-channel
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=ripeer1.ri.blockchain.io:9051
+      - CORE_PEER_LOCALMSPID=RapidInnovationMSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/ri.blockchain.io/peers/ripeer1.ri.blockchain.io/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/ri.blockchain.io/peers/ripeer1.ri.blockchain.io/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/ri.blockchain.io/peers/ripeer1.ri.blockchain.io/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/ri.blockchain.io/users/Admin@ri.blockchain.io/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./../chaincode/:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode
+      - ../crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ../:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - ../channel-artefacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    depends_on:
+      - orderer
+      - hondapeer1.honda.bigwing.com
+      - hondapeer2.honda.bigwing.com
+      - ripeer1.ri.blockchain.io
+      - ripeer2.ri.blockchain.io
+    networks:
+      - test
+
+
+  chaincode:
+    container_name: chaincode
+    image: hyperledger/fabric-ccenv:2.2
+    tty: true
+    environment:
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=DEBUG
+      - CORE_PEER_ID=chaincode
+      - CORE_PEER_ADDRESS=hondapeer1.honda.bigwing.com:7051
+      - CORE_PEER_LOCALMSPID=HondaMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer #/opt/gopath/src/chaincode
+    command: /bin/sh -c 'sleep 6000000'
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./msp:/etc/hyperledger/msp
+      - ./../chaincode:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode
+    depends_on:
+      - orderer
+      - ripeer1.ri.blockchain.io
+      - ripeer2.ri.blockchain.io
+      - hondapeer1.honda.bigwing.com
+      - hondapeer2.honda.bigwing.com
